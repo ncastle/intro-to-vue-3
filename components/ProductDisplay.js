@@ -4,6 +4,10 @@ app.component('product-display', {
       type: Boolean,
       required: true,
     },
+    cart: {
+      type: Array,
+      required: true,
+    },
   },
   template:
     /*html*/
@@ -51,8 +55,8 @@ app.component('product-display', {
           <button
             class="button"
             @click="removeFromCart"
-            :disabled="cart === 0"
-            :class="{ disabledButton: cart === 0}"
+            :disabled="!cartSize"
+            :class="{ disabledButton: !cartSize}"
           >
             Remove from Cart
           </button>
@@ -86,36 +90,33 @@ app.component('product-display', {
           quantity: 33,
         },
         {
-          id: 2234,
+          id: 2235,
           color: 'blue',
           image: './assets/images/socks_blue.jpg',
-          quantity: 0,
+          quantity: 5,
         },
       ],
       sizes: ['tiny timmy', 'regular randle', 'large and in charge larry'],
     };
   },
   methods: {
+    getVariant() {
+      return this.variants[this.selectedVariant];
+    },
+    variantIsInStock() {
+      const variant = this.getVariant();
+      if (variant.quantity > 0) return true;
+      return false;
+    },
     addToCart() {
-      if (this.inStock && this.inventory > 0) {
-        this.cart += 1;
-        this.inventory -= 1;
-      }
-      this.updateInventory();
+      // if (this.variantIsInStock()) {
+      this.$emit('add-to-cart', this.variants[this.selectedVariant].id);
+      this.variants[this.selectedVariant].quantity -= 1;
+      // }
     },
     removeFromCart() {
-      if (this.cart > 0) {
-        this.cart -= 1;
-        this.inventory += 1;
-      }
-      this.updateInventory();
-    },
-    updateInventory() {
-      if (this.inventory > 0) {
-        this.inStock = true;
-      } else {
-        this.inStock = false;
-      }
+      this.$emit('remove-by-id', this.variants[this.selectedVariant].id);
+      this.variants[this.selectedVariant].quantity += 1;
     },
     updateVariant(index) {
       this.selectedVariant = index;
@@ -142,6 +143,9 @@ app.component('product-display', {
         return 'Free';
       }
       return '2.99';
+    },
+    cartSize() {
+      return this.cart.length;
     },
   },
 });
